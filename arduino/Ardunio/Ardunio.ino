@@ -15,6 +15,11 @@ int AA;
 int randomV;
 int attente;
 
+int V_Max = 25;
+int V_VG1 = -50;
+int V_VG2 = 70;
+int V_VD1 = 70;
+int V_VD2 = -50;
 
 int xAcar = 1;
 int yAcar = 0 ;
@@ -31,30 +36,22 @@ void setup() {
   Motor.begin(I2C_ADDRESS);
 }
 void Avancer() {
-  Motor.speed(MOTOR1, 30);
-  Motor.speed(MOTOR2, 30);
+  Motor.speed(MOTOR1, V_Max);
+  Motor.speed(MOTOR2, V_Max);
 }
 void TurnRight() {
   if (HIGH == digitalRead(signalPinAD)) {
-    Motor.speed(MOTOR1, 50);
-    Motor.speed(MOTOR2, 20);
-    while (HIGH != digitalRead(signalPinAA)) delay(100);
-  } else if (HIGH == digitalRead(signalPinAG)) {
-    Motor.speed(MOTOR1, 20);
-    Motor.speed(MOTOR2, 50);
-    while (HIGH != digitalRead(signalPinAA)) delay(100);
+    Motor.speed(MOTOR1, V_VD1);
+    Motor.speed(MOTOR2, V_VD2);
+    //while (HIGH != digitalRead(signalPinAA)) delay(100);
   }
 }
 void TurnLeft() {
   if (HIGH == digitalRead(signalPinAG)) {
-    Motor.speed(MOTOR1, 20);
-    Motor.speed(MOTOR2, 50);
-    while (HIGH != digitalRead(signalPinAA)) delay(100);
-  } else if (HIGH == digitalRead(signalPinAD)) {
-    Motor.speed(MOTOR1, 50);
-    Motor.speed(MOTOR2, 20);
-    while (HIGH != digitalRead(signalPinAA)) delay(100);
-  }
+    Motor.speed(MOTOR1, V_VG1);
+    Motor.speed(MOTOR2, V_VG2);
+    //while (HIGH != digitalRead(signalPinAA)) delay(100);
+  } 
 }
 
 void ChoixDirection() {
@@ -173,7 +170,7 @@ void ChoixDirection() {
 
 void loop() {
   
-  //initialisation des variables
+ /* //initialisation des variables
   if(HIGH == digitalRead(signalPinAA))AA = 1;
   else AA = 0;
   if(HIGH == digitalRead(signalPinAD))AD = 1;
@@ -191,8 +188,8 @@ void loop() {
   }else{
     // si aucun capteur n'est actif, continuer le mouvement
     if (AD == 0 && AG == 0){
-       Motor.speed(MOTOR1, 0);
-       Motor.speed(MOTOR2, 0);
+       //Motor.speed(MOTOR1, 0);
+       //Motor.speed(MOTOR2, 0);
     }
     // si seul le capteur droit est actif, aller à gauche
     else if(AD == 1 && AG == 0) TurnLeft();
@@ -201,5 +198,29 @@ void loop() {
     // si le capteur droite et gauche est actif, choisir une direciton
     else ChoixDirection();
   }
-  delay(100);
+*/
+
+  if(HIGH == digitalRead(signalPinAA)){
+/*     if(HIGH == digitalRead(signalPinAD)){
+        ChoixDirection;
+       }
+       if(HIGH == digitalRead(signalPinAG)){
+        ChoixDirection;
+  }
+*/    Avancer();
+    Serial.println("Avant");
+
+  }
+  if(HIGH == digitalRead(signalPinAD)){
+    TurnLeft();
+    Serial.println("Droite");
+
+  }
+  if(HIGH == digitalRead(signalPinAG)){
+    TurnRight();
+    Serial.println("Gauche");
+
+    
+  }
+  //delay(100);
 }
