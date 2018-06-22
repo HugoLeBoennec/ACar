@@ -9,10 +9,7 @@
 int signalPinAG = 8; // Les différents capteurs
 int signalPinAD = 3;
 int signalPinAA = 4;
-int AG;
-int AD;
-int AA;
-int randomV;
+int middle = 0;
 int attente;
 int Dir;
 
@@ -41,15 +38,25 @@ void Avancer() {
   Motor.speed(MOTOR2, V_Max);
 }
 void TurnRight() {
-  if (HIGH == digitalRead(signalPinAD)) {
+  while (HIGH != digitalRead(signalPinAA)) {
     Motor.speed(MOTOR1, V_VD1);
     Motor.speed(MOTOR2, V_VD2);
   }
 }
 void TurnLeft() {
-  if (HIGH == digitalRead(signalPinAG)) {
+  while (HIGH != digitalRead(signalPinAA)) {
     Motor.speed(MOTOR1, V_VG1);
     Motor.speed(MOTOR2, V_VG2);
+  } 
+}
+
+void HalfTurn(){
+    Motor.speed(MOTOR1, V_VD1);
+    Motor.speed(MOTOR2, V_VD2);
+    delay(250);
+while (HIGH != digitalRead(signalPinAA)) {
+    Motor.speed(MOTOR1, V_VD1);
+    Motor.speed(MOTOR2, V_VD2);
   } 
 }
 
@@ -211,6 +218,14 @@ void loop() {
   if(HIGH == digitalRead(signalPinAG)){
   Dir = 3;
   }
+
+   if(HIGH != digitalRead(signalPinAA) && HIGH != digitalRead(signalPinAG) && HIGH != digitalRead(signalPinAD)){
+  // perte de ligne
+  Serial.println("perte de ligne");
+  Dir = 4;
+}
+
+  
 switch (Dir) {
   case 1 :
   Avancer();
@@ -222,6 +237,29 @@ switch (Dir) {
   
   case 3 :
   TurnLeft();
+  break;
+  
+  case 4 :
+      Motor.speed(MOTOR1, -20);
+      Motor.speed(MOTOR2, 35);
+      delay(50);
+      Serial.println("Recherche");
+      if( HIGH != digitalRead(signalPinAA)){
+        Motor.speed(MOTOR2, -20);
+        Motor.speed(MOTOR1, 35); 
+        delay(100);
+       middle ++;
+       Serial.println(middle);
+       if(middle >= 5){
+        middle = 0;
+            Motor.speed(MOTOR1, -20);
+            Motor.speed(MOTOR2, 35);
+            while(HIGH != digitalRead(signalPinAA)){
+              delay(50);
+
+            }
+       }
+      }
   break;
 }
 }
