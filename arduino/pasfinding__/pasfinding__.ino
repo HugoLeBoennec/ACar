@@ -6,9 +6,9 @@
 #define I2C_ADDRESS 0x0f
 
                                   // variable de départ //
-                                        int arive = 2;
+                                        int arive = 4;
                                        int depart = 16;
-                                    int Direction = 3;
+                                    int Direction = 2;
                                   // variable de départ //
 
 // Les différents capteurs
@@ -118,14 +118,16 @@ void TurnLeft() {
 }
 
 void HalfTurn(){
-    Motor.speed(MOTOR1, V_VD1-20);
-    Motor.speed(MOTOR2, V_VD2);
-    delay(250);
+    Motor.speed(MOTOR1, V_VD1);
+    Motor.speed(MOTOR2, V_VD2-25);
+    delay(800);
 while (HIGH != digitalRead(signalPinAA)) {
-    Motor.speed(MOTOR1, V_VD1-20);
-    Motor.speed(MOTOR2, V_VD2);
-    delay(50);
-  } 
+    Motor.speed(MOTOR1, V_VD1);
+    Motor.speed(MOTOR2, V_VD2-25);
+  }
+  Motor.speed(MOTOR1, V_VD2);
+  Motor.speed(MOTOR2, V_VD1);
+  delay(50);
 }
 
 void Pathfinding(){
@@ -235,6 +237,7 @@ void Pathfinding(){
 
 void ChoixDirection(){
   // chois de la direction
+  if (fin[F-N] == 0)FIN_PROGRAME = 1;
       if (fin[F-N]>=0){
       Px = lieu[0][fin[F-N]];
       Py = lieu[1][fin[F-N]];
@@ -363,9 +366,6 @@ void ChoixDirection(){
         N--;
         xAcar = Px;
         yAcar = Py;
-        if (fin[F-N] == 0)FIN_PROGRAME = 1;
-        
-        
   }
   
 void loop() {
