@@ -1,18 +1,43 @@
-void setup() {
-  Serial.begin(9600);
-}
+// Les bibliothèques
 
-void loop() {
+#include <SoftwareSerial.h>
+#include <Wire.h>
+#include "Grove_I2C_Motor_Driver.h"
+#define I2C_ADDRESS 0x0f
 
-// départ / arivée
-int arive = 2;
-int depart = 5;
+                                  // variable de départ //
+                                        int arive = 2;
+                                       int depart = 16;
+                                    int Direction = 3;
+                                  // variable de départ //
+
+// Les différents capteurs
+int signalPinAG = 8; 
+int signalPinAD = 3;
+int signalPinAA = 4;
+
+// donnée de vitesse
+int V_Max = 30;
+int V_VG1 = -25;
+int V_VG2 = 55;
+int V_VD1 = 55;
+int V_VD2 = -25;
+
+// positions
+int Px;
+int Py;
+int Dir = 0;
+int middle = 0;
+int N = 6;
+
+// variable de fin
+int FIN_PROGRAME = 0;
 
 // les tables
 int liaison[2][42] = {{1,1,2,2,2,3,3,3,4,4,4 ,5,5 ,6,6,6,7,7,7,8,8,9,9 ,9 ,10,10,10,10,11,11,11,12,12,13,13,14,14,15,15,15,16,16},
                       {2,6,1,3,7,2,4,8,3,5,10,4,11,1,7,9,2,6,8,3,7,6,10,14,4 ,9 ,11,13,5 ,10,16,15,12,10,12,9 ,15,12,14,16,11,15}};
 int lieu[2][17] = {/*{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16},*/
-                   {0,0,1,2,3,4,0,1,2,1,3 ,4 ,1 ,3 ,0 ,1 ,4 },
+                   {0,0,1,2,3,4,0,1,2,0,3 ,4 ,1 ,3 ,0 ,1 ,4 },
                    {0,0,0,0,0,0,1,1,1,2,2 ,2 ,3 ,3 ,4 ,4 ,4 }};
 int OK[2][16] = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16},
                  {1,1,1,1,1,1,1,1,1,1 ,1 ,1 ,1 ,1 ,1 ,1 }};  
@@ -48,19 +73,63 @@ int OK[2][16] = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16},
   int z = 0;
 
   int niveau = 10;
+  int xAcar = lieu[0][depart];
+  int yAcar = lieu[1][depart];
 
-// position du point suivant
-  int Px;
-  int Py;
+void setup() {
+  pinMode(signalPinAG, INPUT);
+  pinMode(signalPinAD, INPUT);
+  pinMode(signalPinAA, INPUT);
+  Serial.begin(9600);
+  Motor.begin(I2C_ADDRESS);
+}
 
-  int Direction = 0;
-  int xAcar = 0;
-  int yAcar = 0;
+//fonction de directions
+void Avancer() {
+  Motor.speed(MOTOR1, V_Max);
+  Motor.speed(MOTOR2, V_Max);
+  middle = 0;
+}
 
-// variable de fin
-int FIN_PROGRAME = 0;
+void EnFace() {
+  Motor.speed(MOTOR1, V_Max);
+  Motor.speed(MOTOR2, V_Max);
+  middle = 0;
+  delay(1000);
+  Serial.println("Avant tout droit et autre");
+}
+void TurnRight() {
+   Motor.speed(MOTOR1, V_VD1);
+   Motor.speed(MOTOR2, V_VD2);
+   delay(500);
+  while (HIGH != digitalRead(signalPinAA)) {
+    delay (50);
+    Serial.println("Droite");
+  }
+}
+void TurnLeft() {
+  Motor.speed(MOTOR1, V_VG1);
+  Motor.speed(MOTOR2, V_VG2);
+  delay(500);
+  while (HIGH != digitalRead(signalPinAA)) {
+    delay (50);
+    Serial.println("Gauche");
+  } 
+}
 
-// passfinding
+void HalfTurn(){
+    Motor.speed(MOTOR1, V_VD1-20);
+    Motor.speed(MOTOR2, V_VD2);
+    delay(250);
+while (HIGH != digitalRead(signalPinAA)) {
+    Motor.speed(MOTOR1, V_VD1-20);
+    Motor.speed(MOTOR2, V_VD2);
+    delay(50);
+  } 
+}
+
+void Pathfinding(){
+  // passfinding
     for (a = 0; a < 42; a++){
       if (liaison[0][a] == depart){
         z++;
@@ -162,27 +231,25 @@ int FIN_PROGRAME = 0;
     }
   }
 }
-// programe principal 
-while (FIN_PROGRAME == 0){
-    
-    // si tournant détécter
+}
 
-    // chois de la direction
-    for (int N = 6; N > 0; N--){
-      if (fin[F-N]!=0){
+void ChoixDirection(){
+  // chois de la direction
+      if (fin[F-N]>=0){
       Px = lieu[0][fin[F-N]];
       Py = lieu[1][fin[F-N]];
+      
         // Vers le Nord
         if (Direction == 1) {
           // si l'objectif est a gauche
           if (xAcar > Px) {
             // se déplacer à gauche
-            TurnLeft();
+            TurnLeft();                           Serial.println("gauche");
             Direction = 4;
             // si l'objectif est a droite
           } else if (xAcar < Px) {
             //se déplacer à droite
-            TurnRight();
+            TurnRight();                           Serial.println("droite");
             Direction = 3;
             // si l'objectif est au meme niveau
           } else {
@@ -195,7 +262,7 @@ while (FIN_PROGRAME == 0){
                 Direction = 1;
               }else {
                 //Avancer
-                Avancer();
+                EnFace();                               Serial.println("Avant");
               }     
           }
       
@@ -204,13 +271,13 @@ while (FIN_PROGRAME == 0){
           //si l'objectif est a droite
           if (xAcar > Px) {
             // se déplacer à droite
-            TurnRight();
+            TurnRight();                           Serial.println("droite");
             Direction = 4;
             
             // si l'objectif est a gauche
           } else if (xAcar < Px) {
             //se déplacer à gauche
-            TurnLeft();
+            TurnLeft();                           Serial.println("gauche");
             Direction = 3;
           } else {
             // si l'objectif est au meme niveau
@@ -222,7 +289,7 @@ while (FIN_PROGRAME == 0){
                 Direction = 1;
               }else {
                 //Avancer
-                Avancer();
+                EnFace();                         Serial.println("Avant");
               }
           }
       
@@ -238,18 +305,18 @@ while (FIN_PROGRAME == 0){
           // si l'objectif est en face
           else if (xAcar < Px){
              // avancer
-             Avancer(); 
+             EnFace();                            Serial.println("Avant");
           }
           else {
             //si l'objectif est a gauche
-            if (yAcar > yDestination) {
+            if (yAcar > Py) {
               //tourner à gauche
-              TurnLeft();
+              TurnLeft();                           Serial.println("gauche");
               Direction = 1;
               // si l'objectif est a droite
-            } else if (yAcar < yDestination) {
+            } else if (yAcar < Py) {
               //tourner à droite
-              TurnRight();
+              TurnRight();                            Serial.println("droite");
               Direction = 2;
               
             }else FIN_PROGRAME = 1;//arrivé
@@ -258,33 +325,94 @@ while (FIN_PROGRAME == 0){
           // Vers l'Ouest
         } else if (Direction == 4) {
           //si l'objectif derrière
-          if (xAcar > Px) {
+          if (xAcar < Px) {
             // demi-tour
             HalfTurn();
-            Direction = 4;
+            Direction = 4;Serial.println("Demi");
           }
           // si l'objectif est en face
-          else if (xAcar < Px){
+          else if (xAcar > Px){
              // avancer
-             Avancer(); 
+             EnFace(); Serial.println("Avant");
           }else{
             // si l'objectif est a droite
-            if (yAcar > yDestination) {
+            if (yAcar > Py) {
               //tourner à droite
-              TurnRight();
+              TurnRight(); Serial.println("droite");
               Direction = 1;
               //si l'objectif est a gauche
-            }else if (yAcar < yDestination) {
+            }else if (yAcar < Py) {
               //tourner à gauche
-              TurnLeft();
+              TurnLeft();Serial.println("gauche");
               Direction = 2;
             }else FIN_PROGRAME = 1; //arrivé
           }
         }
+      }
         // actualisation de la potion de la voiture
+        Serial.print("chemin : ");
+        Serial.println(fin[F-N]);
+        Serial.print("Px : ");
+        Serial.println(Px);
+        Serial.print("Py : ");
+        Serial.println(Py);
+        Serial.print("xcar : ");
+        Serial.println(xAcar);
+        Serial.print("ycar : ");
+        Serial.println(yAcar);
+        N--;
         xAcar = Px;
         yAcar = Py;
-      }
+        if (fin[F-N] == 0)FIN_PROGRAME = 1;
+        
+        
+  }
+  
+void loop() {
+  
+  Pathfinding();
+  Serial.println("chemin : ");
+    if (fin[F-6]!=0) Serial.println(fin[F-6]);
+    if (fin[F-5]!=0) Serial.println(fin[F-5]);
+    if (fin[F-4]!=0) Serial.println(fin[F-4]);
+    if (fin[F-3]!=0) Serial.println(fin[F-3]);
+    if (fin[F-2]!=0) Serial.println(fin[F-2]);
+    if (fin[F-1]!=0)  Serial.println(fin[F-1]);
+
+  // programe principal 
+  while (FIN_PROGRAME == 0){
+     if(HIGH == digitalRead(signalPinAA))Dir = 1;
+     if(HIGH == digitalRead(signalPinAD))Dir = 2;
+     if(HIGH == digitalRead(signalPinAG))Dir = 2;
+     if(HIGH != digitalRead(signalPinAA) && HIGH != digitalRead(signalPinAG) && HIGH != digitalRead(signalPinAD))Dir = 3;  // perte de ligne
+        
+  switch (Dir) {
+    case 1 : Avancer(); break;
+    case 2 : ChoixDirection();break;
+    case 3 :
+        Motor.speed(MOTOR1, -25);
+        Motor.speed(MOTOR2, 40);
+        delay(25);
+        if( HIGH != digitalRead(signalPinAA)){
+          Motor.speed(MOTOR2, -25);
+          Motor.speed(MOTOR1, 40); 
+          delay(75);
+          middle ++;
+          Serial.println(middle);
+          if(middle >= 5){
+            middle = 0;
+            Motor.speed(MOTOR1, -25);
+            Motor.speed(MOTOR2, 40);
+            while(HIGH != digitalRead(signalPinAA)){
+              delay(25);
+            }
+          }
+        }
+    break;
     }
   }
+  Serial.println("FIN du programe");
+  Motor.speed(MOTOR2, 0);
+  Motor.speed(MOTOR1, 0);
+  delay (100000);
 }
