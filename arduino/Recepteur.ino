@@ -2,7 +2,7 @@
 
 int RF_RX_PIN = 6; 
 int num = 0;
-int numero = 1;
+int numero = 0;
 
 void setup() 
 {
@@ -20,17 +20,27 @@ void loop()
   uint8_t buflen = sizeof buf; 
   if (vw_get_message(buf, &buflen)) // Non-blocking
     {
-      if (numero == 1){
+      if (numero == 0){
+        if ((char *)buf == "P")numero = 1;
+        else if ((char *)buf == "D") numero = 3;
+      }
+      else if (numero == 1){
         numero = 2;
         num = atoi((char *)buf);
         Serial.print("Px = ");
         Serial.println(num);
       }
       else if (numero == 2){
-        numero = 1;
         num = atoi((char *)buf);
         Serial.print("Py = ");
         Serial.println(num);
+        numero = 0;
+      }
+      else if (numero == 3){
+        num = atoi((char *)buf);
+        Serial.print("Distance = ");
+        Serial.println(num);
+        numero = 0;
       }
     }
 }
