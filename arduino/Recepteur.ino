@@ -1,6 +1,6 @@
 #include <VirtualWire.h> 
 
-int RF_RX_PIN = 4; 
+int RF_RX_PIN = 6; 
 
 void setup() 
 {
@@ -18,19 +18,6 @@ void loop()
   uint8_t buflen = sizeof buf; 
   if (vw_get_message(buf, &buflen)) // Non-blocking
     {
-  int i;
-
-        digitalWrite(13, true); // Flash a light to show received good message
-  // Message with a good checksum received, dump it.
-  Serial.print("Got: ");
-
-  for (i = 0; i < buflen; i++)
-  {
-      Serial.print(buf[i], HEX);
-      Serial.print(" ");
-  }
-  Serial.begin(9600);
-  Serial.println("hello");
-        digitalWrite(13, false);
+ Serial.println((char *)buf);
     }
 }
